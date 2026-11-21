@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, text
 from persistencia.conexion import Base
 
 from sqlalchemy.orm import relationship
@@ -15,6 +15,16 @@ class Vehiculo(Base):
 
 class Estadia(Base):
     __tablename__ = "estadias"
+
+    __table_args__ = (
+        Index(
+            "estadia_activa_por_vehiculo",
+            "vehiculo_id",
+            unique=True,
+            sqlite_where=text("fecha_salida IS NULL"),
+        ),
+    )
+
     id = Column(Integer, primary_key=True)
     vehiculo_id = Column(Integer, ForeignKey("vehiculos.id"), nullable=False)
     fecha_ingreso = Column(DateTime, nullable=False)
