@@ -15,6 +15,10 @@ y por suscripción mensual, y consultar la recaudación del estacionamiento.
 
 Python, Tkinter, SQLAlchemy y SQLite.
 
+Al ejecutar `python main.py`, las pantallas de vehículos e ingresos guardan los
+datos en SQLite. La pestaña Salidas queda deshabilitada hasta conectar su función
+real. Las pruebas de la interfaz siguen usando datos de ejemplo en memoria.
+
 ## Distribución de tareas
 
 - Gonzalo Albornoz: calcula los cobros, revisa la vigencia de las suscripciones y genera los reportes de recaudación.

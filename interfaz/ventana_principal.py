@@ -19,7 +19,7 @@ class VentanaPrincipal(tk.Tk):
         registrar_vehiculo,
         listar_vehiculos,
         registrar_ingreso,
-        registrar_salida,
+        registrar_salida=None,
     ):
         super().__init__()
         self.title("Patente y Pago")
@@ -38,6 +38,8 @@ class VentanaPrincipal(tk.Tk):
         self._pestanas.add(self.pantalla_vehiculos, text="Vehículos")
         self._pestanas.add(self.pantalla_ingresos, text="Ingresos")
         self._pestanas.add(self.pantalla_salidas, text="Salidas")
+        if registrar_salida is None:
+            self._pestanas.tab(self.pantalla_salidas, state="disabled")
 
         # Próximos PR: agregar aquí las pestañas de suscripciones,
         # historial y reportes con self._pestanas.add(...).

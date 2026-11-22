@@ -1,22 +1,21 @@
 """Punto de entrada de "Patente y Pago"."""
 
-from interfaz.ventana_principal import VentanaPrincipal
+from tkinter import messagebox
 
-# TODO(integración): reemplazar por las funciones reales, p. ej.
-#   from persistencia.vehiculos import registrar_vehiculo, listar_vehiculos
-#   from ... import registrar_ingreso, registrar_salida
-# y llamar antes a crear_tablas() de persistencia.conexion.
-from interfaz.servicios_demo import (
-    registrar_vehiculo,
-    listar_vehiculos,
-    registrar_ingreso,
-    registrar_salida,
-)
+from interfaz.ventana_principal import VentanaPrincipal
+from persistencia.conexion import crear_tablas
+from persistencia.ingresos import registrar_ingreso
+from persistencia.vehiculos import registrar_vehiculo, listar_vehiculos
 
 
 def main():
+    try:
+        crear_tablas()
+    except ValueError as error:
+        messagebox.showerror("No se pudo preparar la base de datos", str(error))
+        return
     ventana = VentanaPrincipal(
-        registrar_vehiculo, listar_vehiculos, registrar_ingreso, registrar_salida
+        registrar_vehiculo, listar_vehiculos, registrar_ingreso
     )
     ventana.mainloop()
 
