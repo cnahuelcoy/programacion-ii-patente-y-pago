@@ -373,12 +373,52 @@ class PruebasPersistencia(unittest.TestCase):
     def test_main_entrega_las_funciones_reales_a_la_ventana(self):
         with patch.object(main, "VentanaPrincipal") as ventana:
             main.main()
-            registrar, listar = ventana.call_args.args
+            registrar, listar, ingresar = ventana.call_args.args
             self.assertIs(registrar, vehiculos.registrar_vehiculo)
             self.assertIs(listar, vehiculos.listar_vehiculos)
+            self.assertIs(ingresar, ingresos.registrar_ingreso)
             resultado = registrar("ABCD12", "Ana", None, "ana@example.com")
             self.assertEqual(listar(), [resultado])
+            estadia = ingresar("ABCD12", self.fecha, "minuto")
+            self.assertEqual(estadia["vehiculo_id"], resultado["id"])
+            self.assertEqual(self._contar(Estadia), 1)
             ventana.return_value.mainloop.assert_called_once()
+
+    def test_main_conecta_las_pantallas_a_sqlite_y_deja_salidas_pendiente(self):
+        def comprobar(ventana):
+            ventana.withdraw()
+            try:
+                with (
+                    patch("tkinter.messagebox.showinfo"),
+                    patch("tkinter.messagebox.showerror") as error,
+                ):
+                    pantalla = ventana.pantalla_vehiculos
+                    pantalla._variables["patente"].set("ABCD12")
+                    pantalla._variables["nombre_responsable"].set("Ana")
+                    pantalla._variables["correo"].set("ana@example.com")
+                    pantalla.registrar()
+
+                    pantalla = ventana.pantalla_ingresos
+                    pantalla._variables["patente"].set("ABCD12")
+                    pantalla._variables["fecha"].set("20/11/2026 10:00:00")
+                    pantalla.registrar()
+
+                    error.assert_not_called()
+                    self.assertEqual(self._contar(Vehiculo), 1)
+                    self.assertEqual(self._contar(Estadia), 1)
+                    self.assertEqual(
+                        ventana._pestanas.tab(ventana.pantalla_ingresos, "state"),
+                        "normal",
+                    )
+                    self.assertEqual(
+                        ventana._pestanas.tab(ventana.pantalla_salidas, "state"),
+                        "disabled",
+                    )
+            finally:
+                ventana.destroy()
+
+        with patch.object(main.VentanaPrincipal, "mainloop", comprobar):
+            main.main()
 
     def test_main_informa_datos_anteriores_inconsistentes(self):
         with (

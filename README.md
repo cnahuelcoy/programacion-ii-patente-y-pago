@@ -15,6 +15,10 @@ y por suscripción mensual, y consultar la recaudación del estacionamiento.
 
 Python, Tkinter, SQLAlchemy y SQLite.
 
+Al ejecutar `python main.py`, las pantallas de vehículos e ingresos guardan los
+datos en SQLite. La pestaña Salidas queda deshabilitada hasta conectar su función
+real. Las pruebas de la interfaz siguen usando datos de ejemplo en memoria.
+
 ## Distribución de tareas
 
 - Gonzalo Albornoz: calcula los cobros, revisa la vigencia de las suscripciones y genera los reportes de recaudación.
@@ -25,10 +29,9 @@ Entre los tres probamos el programa y preparamos el informe, los diagramas y la 
 
 ## Primer PR: cobro por minuto
 
-Esta etapa implementa únicamente la lógica de cobro en `dominio/`.
+La primera etapa implementó la lógica de cobro por minuto en `dominio/`.
 No necesita instalar dependencias externas, abrir Tkinter ni conectar SQLite.
-Requiere Python 3. Las modalidades diaria y mensual y los reportes se
-incorporarán en los siguientes PR.
+Requiere Python 3.
 
 ### Ejemplo de uso
 
@@ -92,3 +95,59 @@ Con una tarifa de $50 por minuto:
 Las pruebas también comprueban fracciones de microsegundo, una estadía
 de 24 horas, tarifas inválidas, cambios de tarifa, tipos de fechas y
 la imposibilidad de instanciar la clase abstracta.
+
+
+## Segundo PR: modalidades diaria y mensual
+
+`CobroDiario` y `CobroMensual` heredan de `ModalidadCobro` e implementan
+el mismo método `calcular_importe(ingreso, salida)`. Así, quien solicita un
+cálculo puede usar cualquier modalidad mediante el mismo contrato, y cada
+clase aplica su propia fórmula.
+
+- `CobroDiario(tarifa)` cobra la tarifa por cada bloque iniciado de 24 horas.
+  Una estadía de cero tiempo cuesta un día; 24 horas cuestan un día; 24 horas
+y un minuto cuestan dos días.
+- `CobroMensual(tarifa)` representa una estadía ya cubierta: su método
+  `calcular_importe` valida las fechas y devuelve $0. La vigencia de la
+  suscripción se resolverá en la parte 3.
+- `calcular_importe_contratacion()` en `CobroMensual` devuelve la tarifa
+  mensual a pagar al contratar. Este pago es independiente de terminar una
+  estadía cubierta.
+- En ambas clases, `__tarifa` es privado y la propiedad `tarifa` permite
+  consultarlo y cambiarlo. El setter acepta solo enteros positivos en pesos
+  chilenos; rechaza booleanos, decimales, cero y negativos.
+- Las modalidades reciben los `datetime` como argumentos. Rechazan tipos
+  incorrectos y una salida anterior al ingreso.
+
+Ejemplo:
+
+```python
+from datetime import datetime, timedelta
+from dominio.cobro_diario import CobroDiario
+from dominio.cobro_mensual import CobroMensual
+
+ingreso = datetime(2026, 11, 14, 10, 0)
+diario = CobroDiario(tarifa=5000)
+print(diario.calcular_importe(ingreso, ingreso + timedelta(hours=24, minutes=1)))
+# 10000: se cobra el segundo bloque diario iniciado.
+
+mensual = CobroMensual(tarifa=30000)
+print(mensual.calcular_importe_contratacion())  # 30000: pago de la suscripción.
+print(mensual.calcular_importe(ingreso, ingreso + timedelta(days=1)))  # 0: estadía cubierta.
+```
+
+### Verificar las modalidades
+
+Desde la raíz del repositorio, ejecuta las pruebas de todos los PR:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+En Windows también se puede ejecutar `py -m unittest discover -s tests -v`.
+Las pruebas de `CobroDiario` cubren cero, 24 horas, 24 horas y un minuto,
+tarifas inválidas, tipos de fecha y salida anterior al ingreso. Las de
+`CobroMensual` comprueban que la contratación cuesta la tarifa configurada,
+que finalizar estadías cubiertas cuesta cero y que las validaciones de tarifa
+y fechas se aplican. También se comprueba que las clases concretas se usan
+mediante el mismo método polimórfico.
