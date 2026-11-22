@@ -2,15 +2,22 @@
 
 from interfaz.ventana_principal import VentanaPrincipal
 
-# TODO(integración): cuando estén listas las funciones reales de persistencia,
-# reemplazar la línea de abajo por su import, por ejemplo:
+# TODO(integración): reemplazar por las funciones reales, p. ej.
 #   from persistencia.vehiculos import registrar_vehiculo, listar_vehiculos
+#   from ... import registrar_ingreso, registrar_salida
 # y llamar antes a crear_tablas() de persistencia.conexion.
-from interfaz.servicios_demo import registrar_vehiculo, listar_vehiculos
+from interfaz.servicios_demo import (
+    registrar_vehiculo,
+    listar_vehiculos,
+    registrar_ingreso,
+    registrar_salida,
+)
 
 
 def main():
-    ventana = VentanaPrincipal(registrar_vehiculo, listar_vehiculos)
+    ventana = VentanaPrincipal(
+        registrar_vehiculo, listar_vehiculos, registrar_ingreso, registrar_salida
+    )
     ventana.mainloop()
 
 
