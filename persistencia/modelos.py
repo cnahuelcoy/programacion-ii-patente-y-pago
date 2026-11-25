@@ -37,6 +37,9 @@ class Estadia(Base):
 
 class Suscripcion(Base):
     __tablename__ = "suscripciones"
+    __table_args__ = (
+        Index("suscripcion_por_vehiculo_y_fechas", "vehiculo_id", "fecha_inicio", "fecha_termino"),
+    )
     id = Column(Integer, primary_key=True)
     vehiculo_id = Column(Integer, ForeignKey("vehiculos.id"), nullable=False)
     fecha_inicio = Column(DateTime, nullable=False)

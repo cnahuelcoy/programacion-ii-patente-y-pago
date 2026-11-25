@@ -27,6 +27,12 @@ real. Las pruebas de la interfaz siguen usando datos de ejemplo en memoria.
 
 Entre los tres probamos el programa y preparamos el informe, los diagramas y la presentación. Si alguien necesita ayuda con una tarea, puede pedírsela al resto del equipo.
 
+## Parte 3 de Carlos: salidas, suscripciones y pagos
+
+Registro de salidas, suscripciones de 30 días y sus pagos, con validaciones y
+reversión ante errores. Incluye la consulta de vehículos presentes. Recibe los
+montos ya calculados; la conexión con las nuevas pantallas queda pendiente.
+
 ## Primer PR: cobro por minuto
 
 La primera etapa implementó la lógica de cobro por minuto en `dominio/`.

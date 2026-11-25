@@ -23,8 +23,9 @@ def crear_tablas():
 
     try:
         Base.metadata.create_all(bind=motor)
-        for indice in modelos.Estadia.__table__.indexes:
-            indice.create(bind=motor, checkfirst=True)
+        for modelo in (modelos.Estadia, modelos.Suscripcion):
+            for indice in modelo.__table__.indexes:
+                indice.create(bind=motor, checkfirst=True)
     except IntegrityError as error:
         if "UNIQUE constraint failed: estadias.vehiculo_id" in str(error.orig):
             raise ValueError(
