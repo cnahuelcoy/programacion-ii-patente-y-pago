@@ -52,6 +52,6 @@ Las pruebas usan datos temporales. Para probar todas las pantallas con datos en 
 
 ## Estado actual
 
-Vehículos e ingresos funcionan con SQLite. Falta conectar salidas, suscripciones y vehículos presentes, y completar historial, filtros, recaudación y datos de ejemplo persistentes.
+Vehículos e ingresos funcionan con SQLite. La persistencia de salidas, suscripciones y pagos y la consulta de vehículos presentes ya están implementadas; falta conectarlas a las pantallas. Quedan historial, filtros, recaudación y datos de ejemplo persistentes.
 
 Para la entrega también quedan el informe con evidencias, el UML actualizado y el ZIP solicitado en Blackboard.
