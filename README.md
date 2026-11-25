@@ -50,8 +50,18 @@ Son valores de la demostración. Falta confirmar las tarifas definitivas y conec
 
 Las pruebas usan datos temporales. Para probar todas las pantallas con datos en memoria, consulta [interfaz/README.md](interfaz/README.md).
 
+## Datos de ejemplo
+
+En una copia nueva del proyecto, antes de registrar datos:
+
+```powershell
+.\.venv\Scripts\python.exe datos_ejemplo.py
+```
+
+Crea seis vehículos, estadías y pagos con fechas de noviembre de 2026. Se niega a sobrescribir una base existente. Las consultas y filtros se explican en [persistencia/README.md](persistencia/README.md).
+
 ## Estado actual
 
-Vehículos e ingresos funcionan con SQLite. La persistencia de salidas, suscripciones y pagos y la consulta de vehículos presentes ya están implementadas; falta conectarlas a las pantallas. Quedan historial, filtros, recaudación y datos de ejemplo persistentes.
+Vehículos e ingresos funcionan con SQLite. Ya existen salidas, suscripciones, pagos, vehículos presentes, historiales, filtros y datos de ejemplo; falta completar su conexión con las pantallas y el reporte de recaudación.
 
 Para la entrega también quedan el informe con evidencias, el UML actualizado y el ZIP solicitado en Blackboard.

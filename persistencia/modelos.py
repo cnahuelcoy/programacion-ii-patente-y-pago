@@ -52,6 +52,7 @@ class Pago(Base):
     __tablename__ = "pagos"
 
     __table_args__ = (
+        Index("pago_por_fecha_y_modalidad", "fecha_pago", "modalidad"),
         CheckConstraint(
             "(estadia_id IS NOT NULL AND suscripcion_id IS NULL) OR "
             "(estadia_id IS NULL AND suscripcion_id IS NOT NULL)",
