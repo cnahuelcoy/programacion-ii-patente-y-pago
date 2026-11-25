@@ -9,18 +9,26 @@ PRUEBA. Las tarifas y fórmulas oficiales las define el equipo en el dominio.
 """
 
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from interfaz.formato import formatear_fecha
 
 # --- DATOS DE PRUEBA (no son las tarifas reales del proyecto) ---
 TARIFA_MINUTO_DEMO = 50        # pesos por minuto
 TARIFA_DIARIA_DEMO = 5000      # pesos por bloque de 24 horas
 PATENTES_MENSUALES_DEMO = {"MENS01"}  # simulan una suscripción vigente
+TARIFA_MENSUAL_DEMO = 30000    # pesos por suscripción de 30 días
+
+DIAS_SUSCRIPCION = 30
 
 MODALIDADES_VALIDAS = ("minuto", "diaria")
 
 _vehiculos = []
 _siguiente_id = 1
 _estadias = []
+_suscripciones = []
+_siguiente_estadia_id = 1
+_siguiente_suscripcion_id = 1
 
 
 def registrar_vehiculo(patente, nombre_responsable, telefono, correo):
@@ -53,6 +61,20 @@ def listar_vehiculos():
     return [dict(v) for v in _vehiculos]
 
 
+def _buscar_vehiculo(patente):
+    for vehiculo in _vehiculos:
+        if vehiculo["patente"] == patente:
+            return vehiculo
+    return None
+
+
+def _buscar_suscripcion_vigente(patente, fecha):
+    for suscripcion in _suscripciones:
+        if suscripcion["patente"] == patente and suscripcion["fecha_inicio"] <= fecha < suscripcion["fecha_termino"]:
+            return suscripcion
+    return None
+
+
 def _buscar_estadia_activa(patente):
     for estadia in _estadias:
         if estadia["patente"] == patente and estadia["fecha_salida"] is None:
@@ -74,20 +96,36 @@ def registrar_ingreso(patente, fecha_ingreso, modalidad):
         raise ValueError("La fecha de ingreso no es válida.")
     if modalidad not in MODALIDADES_VALIDAS:
         raise ValueError("La modalidad debe ser \"minuto\" o \"diaria\".")
-    if not any(v["patente"] == patente for v in _vehiculos):
+    global _siguiente_estadia_id
+
+    vehiculo = _buscar_vehiculo(patente)
+    if vehiculo is None:
         raise ValueError(
             f"El vehículo {patente} no está registrado. Regístralo primero en la pestaña Vehículos."
         )
     if _buscar_estadia_activa(patente) is not None:
         raise ValueError(f"El vehículo {patente} ya tiene una estadía activa.")
 
+    suscripcion = _buscar_suscripcion_vigente(patente, fecha_ingreso)
+    if suscripcion is not None:
+        modalidad = "mensual"
+
     # DATO DE PRUEBA: la cobertura mensual real depende de las suscripciones.
     if patente in PATENTES_MENSUALES_DEMO:
         modalidad = "mensual"
 
     _estadias.append(
-        {"patente": patente, "fecha_ingreso": fecha_ingreso, "fecha_salida": None, "modalidad": modalidad}
+        {
+            "estadia_id": _siguiente_estadia_id,
+            "vehiculo_id": vehiculo["id"],
+            "patente": patente,
+            "fecha_ingreso": fecha_ingreso,
+            "fecha_salida": None,
+            "modalidad": modalidad,
+            "suscripcion_id": suscripcion["id"] if suscripcion is not None else None,
+        }
     )
+    _siguiente_estadia_id += 1
     return {"patente": patente, "fecha_ingreso": fecha_ingreso, "modalidad": modalidad}
 
 
@@ -130,9 +168,72 @@ def registrar_salida(patente, fecha_salida):
     }
 
 
+def contratar_suscripcion(patente, fecha_inicio):
+    global _siguiente_suscripcion_id
+
+    patente = patente.strip().upper()
+    if not patente:
+        raise ValueError("La patente no puede estar vacía.")
+    if not isinstance(fecha_inicio, datetime):
+        raise ValueError("La fecha de inicio no es válida.")
+    if _buscar_vehiculo(patente) is None:
+        raise ValueError(
+            f"El vehículo {patente} no está registrado. Regístralo primero en la pestaña Vehículos."
+        )
+
+    fecha_termino = fecha_inicio + timedelta(days=DIAS_SUSCRIPCION)
+    for existente in _suscripciones:
+        if (
+            existente["patente"] == patente
+            and fecha_inicio < existente["fecha_termino"]
+            and fecha_termino > existente["fecha_inicio"]
+        ):
+            raise ValueError(
+                f"El vehículo {patente} ya tiene una suscripción entre "
+                f"{formatear_fecha(existente['fecha_inicio'])} y {formatear_fecha(existente['fecha_termino'])}."
+            )
+
+    fecha_pago = datetime.now().replace(microsecond=0)
+    _suscripciones.append(
+        {
+            "id": _siguiente_suscripcion_id,
+            "patente": patente,
+            "fecha_inicio": fecha_inicio,
+            "fecha_termino": fecha_termino,
+        }
+    )
+    _siguiente_suscripcion_id += 1
+    return {
+        "patente": patente,
+        "fecha_inicio": fecha_inicio,
+        "fecha_termino": fecha_termino,
+        "monto": TARIFA_MENSUAL_DEMO,
+        "fecha_pago": fecha_pago,
+    }
+
+
+def listar_vehiculos_presentes():
+    presentes = [e for e in _estadias if e["fecha_salida"] is None]
+    return [
+        {
+            "estadia_id": e["estadia_id"],
+            "vehiculo_id": e["vehiculo_id"],
+            "patente": e["patente"],
+            "nombre_responsable": _buscar_vehiculo(e["patente"])["nombre_responsable"],
+            "fecha_ingreso": e["fecha_ingreso"],
+            "modalidad": e["modalidad"],
+            "suscripcion_id": e["suscripcion_id"],
+        }
+        for e in sorted(presentes, key=lambda e: e["fecha_ingreso"])
+    ]
+
+
 def reiniciar_demo():
     """Vacía los datos de ejemplo (útil para las pruebas)."""
-    global _siguiente_id
+    global _siguiente_id, _siguiente_estadia_id, _siguiente_suscripcion_id
     _vehiculos.clear()
     _estadias.clear()
+    _suscripciones.clear()
     _siguiente_id = 1
+    _siguiente_estadia_id = 1
+    _siguiente_suscripcion_id = 1
