@@ -64,6 +64,15 @@ class PruebasPantallaVehiculos(unittest.TestCase):
         self.pantalla.registrar()
         self.assertEqual([f[1] for f in self._filas()], ["AAAA11", "BBBB22"])
 
+    def test_telefono_con_letras_no_se_guarda_en_la_demo(self):
+        self._llenar("ABCD12", "Ana", "123abc", "ana@example.com")
+        self.pantalla.registrar()
+        self.error.assert_called_once()
+        self.assertIn("teléfono", self.error.call_args.args[1])
+        self.info.assert_not_called()
+        self.assertEqual(servicios_demo.listar_vehiculos(), [])
+        self.assertEqual(self.pantalla._variables["telefono"].get(), "123abc")
+
     def test_patente_vacia_muestra_error_y_no_registra(self):
         self._llenar("   ", "Ana")
         self.pantalla.registrar()

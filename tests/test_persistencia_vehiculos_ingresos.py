@@ -120,6 +120,45 @@ class PruebasPersistencia(unittest.TestCase):
         self.assertEqual(resultado["telefono"], "+56911112222")
         self.assertEqual(resultado["correo"], "")
 
+    def test_telefono_invalido_no_guarda_vehiculo_aunque_haya_correo(self):
+        for telefono in ("hola", "123abc", "+569abc", "+", "++56", "123+45",
+                         "12 345", "123-456", "123.45", "123\n456", "１２３", 123, True):
+            with self.subTest(telefono=telefono):
+                with self.assertRaisesRegex(ValueError, "teléfono"):
+                    vehiculos.registrar_vehiculo("ABCD12", "Ana", telefono, "ana@example.com")
+        self.assertEqual(self._contar(Vehiculo), 0)
+
+    def test_telefono_numerico_conserva_ceros_y_prefijo(self):
+        for numero, telefono in enumerate(("00123456", "911112222", "+56911112222")):
+            with self.subTest(telefono=telefono):
+                resultado = vehiculos.registrar_vehiculo(
+                    f"ABCD{numero:02d}", "Ana", f"  {telefono}  ", None
+                )
+                self.assertEqual(resultado["telefono"], telefono)
+        self.assertEqual([v["telefono"] for v in vehiculos.listar_vehiculos()],
+                         ["00123456", "911112222", "+56911112222"])
+
+    def test_pantalla_rechaza_telefono_con_letras_y_conserva_formulario(self):
+        raiz = tk.Tk()
+        raiz.withdraw()
+        try:
+            with patch("tkinter.messagebox.showinfo") as informacion, \
+                    patch("tkinter.messagebox.showerror") as error:
+                pantalla = PantallaVehiculos(raiz, vehiculos.registrar_vehiculo, vehiculos.listar_vehiculos)
+                pantalla._variables["patente"].set("ABCD12")
+                pantalla._variables["nombre_responsable"].set("Ana")
+                pantalla._variables["telefono"].set("123abc")
+                pantalla._variables["correo"].set("ana@example.com")
+                pantalla.registrar()
+                error.assert_called_once()
+                self.assertIn("teléfono", error.call_args.args[1])
+                informacion.assert_not_called()
+                self.assertEqual(pantalla._variables["telefono"].get(), "123abc")
+                self.assertEqual(pantalla._tabla.get_children(), ())
+                self.assertEqual(self._contar(Vehiculo), 0)
+        finally:
+            raiz.destroy()
+
     def test_datos_invalidos_no_guardan_vehiculos(self):
         casos = [
             (" ", "Ana", "123", ""),
