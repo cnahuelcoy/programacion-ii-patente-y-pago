@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from dominio.contactos import normalizar_telefono
 from persistencia.conexion import sesion_local
 from persistencia.modelos import Vehiculo
 
@@ -48,7 +49,7 @@ def _vehiculo_a_diccionario(vehiculo):
 def registrar_vehiculo(patente, nombre_responsable, telefono, correo):
     patente = _normalizar_patente(patente)
     nombre_responsable = _limpiar_texto(nombre_responsable, "El nombre del responsable")
-    telefono = _limpiar_texto(telefono, "El teléfono")
+    telefono = normalizar_telefono(telefono)
     correo = _limpiar_texto(correo, "El correo")
 
     if not nombre_responsable:

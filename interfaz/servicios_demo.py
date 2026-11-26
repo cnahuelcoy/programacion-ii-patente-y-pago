@@ -11,6 +11,7 @@ PRUEBA. Las tarifas y fórmulas oficiales las define el equipo en el dominio.
 import math
 from datetime import datetime, timedelta
 
+from dominio.contactos import normalizar_telefono
 from interfaz.formato import formatear_fecha
 
 # --- DATOS DE PRUEBA (no son las tarifas reales del proyecto) ---
@@ -41,6 +42,7 @@ def registrar_vehiculo(patente, nombre_responsable, telefono, correo):
     patente = patente.strip().upper()
     if not patente:
         raise ValueError("La patente no puede estar vacía.")
+    telefono = normalizar_telefono(telefono)
     if any(v["patente"] == patente for v in _vehiculos):
         raise ValueError(f"Ya existe un vehículo con la patente {patente}.")
 
@@ -48,7 +50,7 @@ def registrar_vehiculo(patente, nombre_responsable, telefono, correo):
         "id": _siguiente_id,
         "patente": patente,
         "nombre_responsable": nombre_responsable.strip(),
-        "telefono": telefono.strip(),
+        "telefono": telefono,
         "correo": correo.strip(),
     }
     _vehiculos.append(vehiculo)
