@@ -23,7 +23,7 @@ def crear_tablas():
 
     try:
         Base.metadata.create_all(bind=motor)
-        for modelo in (modelos.Estadia, modelos.Suscripcion):
+        for modelo in (modelos.Estadia, modelos.Suscripcion, modelos.Pago):
             for indice in modelo.__table__.indexes:
                 indice.create(bind=motor, checkfirst=True)
     except IntegrityError as error:
