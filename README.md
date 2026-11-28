@@ -60,8 +60,22 @@ En una copia nueva del proyecto, antes de registrar datos:
 
 Crea seis vehículos, estadías y pagos con fechas de noviembre de 2026. Se niega a sobrescribir una base existente. Las consultas y filtros se explican en [persistencia/README.md](persistencia/README.md).
 
+En Windows también se puede ejecutar `py -m unittest discover -s tests -v`.
+Las pruebas de `CobroDiario` cubren cero, 24 horas, 24 horas y un minuto,
+tarifas inválidas, tipos de fecha y salida anterior al ingreso. Las de
+`CobroMensual` comprueban que la contratación cuesta la tarifa configurada,
+que finalizar estadías cubiertas cuesta cero y que las validaciones de tarifa
+y fechas se aplican. También se comprueba que las clases concretas se usan
+mediante el mismo método polimórfico.
+
+## Cuarto PR: reportes de recaudación
+
+`generar_reporte_recaudacion(pagos, fecha_desde, fecha_hasta, modalidad)`
+devuelve el total y su distribución. El rango de `fecha_pago` incluye desde y
+excluye hasta; cada `pago_id` se cuenta una vez.
+
 ## Estado actual
 
-Vehículos e ingresos funcionan con SQLite. Ya existen salidas, suscripciones, pagos, vehículos presentes, historiales, filtros y datos de ejemplo; falta completar su conexión con las pantallas y el reporte de recaudación.
+Vehículos e ingresos funcionan con SQLite. Ya existen salidas, suscripciones, pagos, vehículos presentes, historiales, filtros y datos de ejemplo; falta completar su conexión con todas las pantallas, incluido el reporte de recaudación.
 
 Para la entrega también quedan el informe con evidencias, el UML actualizado y el ZIP solicitado en Blackboard.
