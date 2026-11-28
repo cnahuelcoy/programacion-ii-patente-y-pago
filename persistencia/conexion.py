@@ -1,5 +1,6 @@
 from pathlib import Path
 from sqlalchemy import create_engine, event
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 RUTA_BASE_DATOS = Path(__file__).resolve().parent.parent / "estacionamiento.db"
@@ -19,4 +20,16 @@ sesion_local = sessionmaker(bind=motor)
 
 def crear_tablas():
     from persistencia import modelos
-    Base.metadata.create_all(bind=motor)
+
+    try:
+        Base.metadata.create_all(bind=motor)
+        for modelo in (modelos.Estadia, modelos.Suscripcion, modelos.Pago):
+            for indice in modelo.__table__.indexes:
+                indice.create(bind=motor, checkfirst=True)
+    except IntegrityError as error:
+        if "UNIQUE constraint failed: estadias.vehiculo_id" in str(error.orig):
+            raise ValueError(
+                "Hay vehículos con más de una estadía activa. "
+                "Corrige esas estadías para completar la actualización de la base de datos."
+            ) from error
+        raise

@@ -1,144 +1,64 @@
 # Patente y Pago
 
-Proyecto de Programación II. Aplicación de escritorio para registrar entradas y salidas de vehículos, gestionar cobros por minuto, por día
-y por suscripción mensual, y consultar la recaudación del estacionamiento.
+Proyecto de Programación II para administrar un estacionamiento y sus cobros por minuto, día y suscripción mensual. Desarrollado con Python, Tkinter, SQLAlchemy y SQLite.
 
-## Integrantes
+## Integrantes y tareas
 
-| Nombre | Usuario de GitHub | Correo Institucional |
+| Integrante | GitHub | Correo institucional |
 | --- | --- | --- |
 | Gonzalo Albornoz | @galbornoz-uct | galbornoz2026@alu.uct.cl |
 | Carlos Nahuelcoy | @cnahuelcoy | cnahuelcoy2026@alu.uct.cl |
 | Rodrigo Sevilla | @rsevilla1 | rsevilla2026@alu.uct.cl |
 
-## Tecnologías
+- Gonzalo: cálculos de cobro, vigencia mensual y reportes.
+- Carlos: base de datos, registros, pagos y consultas.
+- Rodrigo: pantallas, formularios y conexión con el sistema.
 
-Python, Tkinter, SQLAlchemy y SQLite.
+Entre los tres probamos el programa y preparamos el informe, UML y presentación.
 
-## Distribución de tareas
+## Instalación y ejecución
 
-- Gonzalo Albornoz: calcula los cobros, revisa la vigencia de las suscripciones y genera los reportes de recaudación.
-- Carlos Nahuelcoy: crea la base de datos y se encarga de guardar y consultar los vehículos, estadías, suscripciones y pagos.
-- Rodrigo Sevilla: crea las ventanas y formularios en Tkinter y los conecta con el resto del sistema.
+Probado con Python 3.12. Se necesita Tkinter. Desde la carpeta del proyecto, en Windows:
 
-Entre los tres probamos el programa y preparamos el informe, los diagramas y la presentación. Si alguien necesita ayuda con una tarea, puede pedírsela al resto del equipo.
-
-## Primer PR: cobro por minuto
-
-La primera etapa implementó la lógica de cobro por minuto en `dominio/`.
-No necesita instalar dependencias externas, abrir Tkinter ni conectar SQLite.
-Requiere Python 3.
-
-### Ejemplo de uso
-
-La tarifa se recibe al construir el objeto: debe ser un entero positivo en
-pesos chilenos por minuto. Los $50 del ejemplo son una tarifa de prueba,
-no una tarifa fija impuesta por el sistema.
-
-```python
-from datetime import datetime
-from dominio.cobro_por_minuto import CobroPorMinuto
-
-cobro = CobroPorMinuto(tarifa=50)
-ingreso = datetime(2026, 11, 14, 10, 0, 0)
-salida = datetime(2026, 11, 14, 10, 1, 10)
-print(cobro.calcular_importe(ingreso, salida))  # 100 pesos
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
-Las fechas deben ser objetos `datetime` comparables; para el uso inicial,
-se emplean fechas sin zona horaria como en el ejemplo.
+La aplicación crea `estacionamiento.db` automáticamente y conserva los datos al cerrarse.
 
-### Cómo funciona y cómo explicarlo
+## Ejemplo de uso
 
-- `ModalidadCobro` hereda de `ABC` y declara `calcular_importe` con
-  `@abstractmethod`: no se puede instanciar y obliga a las clases concretas
-  a implementar ese método.
-- `CobroPorMinuto` hereda ese contrato y define la fórmula del cobro.
-  Las futuras modalidades podrán usarse mediante el mismo método.
-- `__tarifa` es el atributo privado. La propiedad `tarifa` permite consultarlo
-  y modificarlo. Su setter rechaza valores no enteros, booleanos, cero y
-  negativos. El constructor también pasa por el setter.
-- Se valida que las fechas sean `datetime` y que la salida no sea anterior
-  al ingreso. Los tipos incorrectos producen `TypeError`; los valores
-  inválidos producen `ValueError`.
-- Al restar las fechas se obtiene un `timedelta`. `divmod` lo divide por
-  un minuto y entrega los minutos completos y el resto. Si sobra tiempo,
-  se suma un minuto; `max(1, minutos)` asegura el mínimo de uno.
-  Esto evita perder precisión por convertir la duración a decimales.
-- El importe es minutos cobrados por tarifa, ambos enteros. El cálculo
-  usa las fechas recibidas y la tarifa configurada; no consulta el reloj
-  ni modifica datos externos.
+En Vehículos, registra `ABCD12`, el nombre del responsable y un teléfono o correo. En Ingresos, escribe esa patente, revisa la fecha y elige minuto o diaria. Al confirmar, el ingreso queda guardado en SQLite.
 
-### Verificación
+## Tarifas de prueba
 
-Desde la raíz del repositorio:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-En Windows también se puede usar `py -m unittest discover -s tests -v`.
-
-Con una tarifa de $50 por minuto:
-
-| Duración | Resultado esperado |
+| Modalidad | Valor |
 | --- | --- |
-| Cero | $50 |
-| Exactamente un minuto | $50 |
-| Un minuto y diez segundos | $100 |
-| Salida anterior al ingreso | `ValueError` |
+| Minuto | $50 por minuto iniciado, mínimo uno |
+| Diaria | $5.000 por bloque iniciado de 24 horas, mínimo uno |
+| Mensual | $30.000 por 30 días; las estadías cubiertas no tienen cobro adicional |
 
-Las pruebas también comprueban fracciones de microsegundo, una estadía
-de 24 horas, tarifas inválidas, cambios de tarifa, tipos de fechas y
-la imposibilidad de instanciar la clase abstracta.
+Son valores de la demostración. Falta confirmar las tarifas definitivas y conectarlas al flujo real.
 
+## Pruebas
 
-## Segundo PR: modalidades diaria y mensual
-
-`CobroDiario` y `CobroMensual` heredan de `ModalidadCobro` e implementan
-el mismo método `calcular_importe(ingreso, salida)`. Así, quien solicita un
-cálculo puede usar cualquier modalidad mediante el mismo contrato, y cada
-clase aplica su propia fórmula.
-
-- `CobroDiario(tarifa)` cobra la tarifa por cada bloque iniciado de 24 horas.
-  Una estadía de cero tiempo cuesta un día; 24 horas cuestan un día; 24 horas
-y un minuto cuestan dos días.
-- `CobroMensual(tarifa)` representa una estadía ya cubierta: su método
-  `calcular_importe` valida las fechas y devuelve $0. La vigencia de la
-  suscripción se resolverá en la parte 3.
-- `calcular_importe_contratacion()` en `CobroMensual` devuelve la tarifa
-  mensual a pagar al contratar. Este pago es independiente de terminar una
-  estadía cubierta.
-- En ambas clases, `__tarifa` es privado y la propiedad `tarifa` permite
-  consultarlo y cambiarlo. El setter acepta solo enteros positivos en pesos
-  chilenos; rechaza booleanos, decimales, cero y negativos.
-- Las modalidades reciben los `datetime` como argumentos. Rechazan tipos
-  incorrectos y una salida anterior al ingreso.
-
-Ejemplo:
-
-```python
-from datetime import datetime, timedelta
-from dominio.cobro_diario import CobroDiario
-from dominio.cobro_mensual import CobroMensual
-
-ingreso = datetime(2026, 11, 14, 10, 0)
-diario = CobroDiario(tarifa=5000)
-print(diario.calcular_importe(ingreso, ingreso + timedelta(hours=24, minutes=1)))
-# 10000: se cobra el segundo bloque diario iniciado.
-
-mensual = CobroMensual(tarifa=30000)
-print(mensual.calcular_importe_contratacion())  # 30000: pago de la suscripción.
-print(mensual.calcular_importe(ingreso, ingreso + timedelta(days=1)))  # 0: estadía cubierta.
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-### Verificar las modalidades
+Las pruebas usan datos temporales. Para probar todas las pantallas con datos en memoria, consulta [interfaz/README.md](interfaz/README.md).
 
-Desde la raíz del repositorio, ejecuta las pruebas de todos los PR:
+## Datos de ejemplo
 
-```bash
-python -m unittest discover -s tests -v
+En una copia nueva del proyecto, antes de registrar datos:
+
+```powershell
+.\.venv\Scripts\python.exe datos_ejemplo.py
 ```
+
+Crea seis vehículos, estadías y pagos con fechas de noviembre de 2026. Se niega a sobrescribir una base existente. Las consultas y filtros se explican en [persistencia/README.md](persistencia/README.md).
 
 En Windows también se puede ejecutar `py -m unittest discover -s tests -v`.
 Las pruebas de `CobroDiario` cubren cero, 24 horas, 24 horas y un minuto,
@@ -153,3 +73,9 @@ mediante el mismo método polimórfico.
 `generar_reporte_recaudacion(pagos, fecha_desde, fecha_hasta, modalidad)`
 devuelve el total y su distribución. El rango de `fecha_pago` incluye desde y
 excluye hasta; cada `pago_id` se cuenta una vez.
+
+## Estado actual
+
+Vehículos e ingresos funcionan con SQLite. Ya existen salidas, suscripciones, pagos, vehículos presentes, historiales, filtros y datos de ejemplo; falta completar su conexión con todas las pantallas, incluido el reporte de recaudación.
+
+Para la entrega también quedan el informe con evidencias, el UML actualizado y el ZIP solicitado en Blackboard.

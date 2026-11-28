@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, text
 from persistencia.conexion import Base
 
 from sqlalchemy.orm import relationship
@@ -15,6 +15,16 @@ class Vehiculo(Base):
 
 class Estadia(Base):
     __tablename__ = "estadias"
+
+    __table_args__ = (
+        Index(
+            "estadia_activa_por_vehiculo",
+            "vehiculo_id",
+            unique=True,
+            sqlite_where=text("fecha_salida IS NULL"),
+        ),
+    )
+
     id = Column(Integer, primary_key=True)
     vehiculo_id = Column(Integer, ForeignKey("vehiculos.id"), nullable=False)
     fecha_ingreso = Column(DateTime, nullable=False)
@@ -27,6 +37,9 @@ class Estadia(Base):
 
 class Suscripcion(Base):
     __tablename__ = "suscripciones"
+    __table_args__ = (
+        Index("suscripcion_por_vehiculo_y_fechas", "vehiculo_id", "fecha_inicio", "fecha_termino"),
+    )
     id = Column(Integer, primary_key=True)
     vehiculo_id = Column(Integer, ForeignKey("vehiculos.id"), nullable=False)
     fecha_inicio = Column(DateTime, nullable=False)
@@ -39,6 +52,7 @@ class Pago(Base):
     __tablename__ = "pagos"
 
     __table_args__ = (
+        Index("pago_por_fecha_y_modalidad", "fecha_pago", "modalidad"),
         CheckConstraint(
             "(estadia_id IS NOT NULL AND suscripcion_id IS NULL) OR "
             "(estadia_id IS NULL AND suscripcion_id IS NOT NULL)",
