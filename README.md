@@ -147,3 +147,9 @@ tarifas inválidas, tipos de fecha y salida anterior al ingreso. Las de
 que finalizar estadías cubiertas cuesta cero y que las validaciones de tarifa
 y fechas se aplican. También se comprueba que las clases concretas se usan
 mediante el mismo método polimórfico.
+
+## Cuarto PR: reportes de recaudación
+
+`generar_reporte_recaudacion(pagos, fecha_desde, fecha_hasta, modalidad)`
+devuelve el total y su distribución. El rango de `fecha_pago` incluye desde y
+excluye hasta; cada `pago_id` se cuenta una vez.
